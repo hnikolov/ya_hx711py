@@ -39,11 +39,18 @@ def setup():
     """
     code run once
     """
-    hx.set_offset(8628588.560)
+    # 1 (average) ratio
+    # hx.set_offset(8628588.560)
     hx.set_ratio(1656.565317)
-    # TODO
-    hx.set_ratios((0.1), (0,1), (0,1), (0,1))
-    
+
+    # TODO 7 ratios for 25, 75, 150, 225, 300, 375, 475 ref. grams
+    # hx.set_offset(8628270.340)
+    # hx.set_ratios((8670386.533,1684.648), (8752399.907,1655.061), (8876659.720,1655.929), (9001015.187,1656.644), (9125726.580,1658.187), (9249752.487,1657.286), (9415005.647,1656.285))
+
+    # 4 ratios for 25, 100, 175, 250 ref grams
+    hx.set_offset(8628906.780)
+    hx.set_ratios((8671186.060,1691.171), (8794613.307,1657.065), (8918932.973,1657.293), (9043501.513,1658.379))
+
     hx.tare()
 
 
@@ -80,6 +87,7 @@ def loop():
 def loop_1():
     idx = 0
     samples = [0, 0, 0, 0] # used as circular buffer
+    avrg = 0
 
     print 'Samples               Average of 4 in a circular buffer'
 
@@ -91,13 +99,14 @@ def loop_1():
                 samples[i] = hx.to_grams( samples[i] )
                 print hx.round_to(samples[i], 0.25), ',', hx.round_to(samples[i], 0.5)
 
-            print '             ',
+            print '                             ',
             print hx.round_to((samples[0] + samples[1] + samples[2] + samples[3]) / 4, 0.25), 'g'
             """
 
             samples[idx] = hx.read_average_LPF() # TODO: Use the other functions as well?
             samples[idx] = hx.to_grams( samples[idx] ) # TODO: avrg before or after the rounding?
             avrg = (samples[0] + samples[1] + samples[2] + samples[3]) / 4
+            #avrg = (avrg + samples[idx]) / 2 # Running average
 
             print hx.round_to(samples[idx], 0.25), ',', hx.round_to(samples[idx], 0.5), '        ',
             print hx.round_to(avrg, 0.25), ',', hx.round_to(avrg, 0.5), 'g'

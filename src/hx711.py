@@ -62,8 +62,8 @@ class HX711:
         self.GAIN   = 1 # default = 128
         self.OFFSET = 0
         self.RATIO  = 1
-        self.RATIOS = [(0,1), (0,1), (0,1), (0,1)] # Measured sensor data (@ reference weight) - ratio pairs
-        
+        self.RATIOS = [(0,1) for _ in range(4)] # (measured sensor data @ reference weight), calculated ratio)
+
         self.DELTA  = 0 # TODO: used in case of 2 sensors
 
         # Low-pass Filter
@@ -115,7 +115,7 @@ class HX711:
     def set_ratio(self, ratio):
         self.RATIO = ratio
 
-        
+
     def set_ratios(self, ratio_1=(0,1), ratio_2=(0,1), ratio_3=(0,1), ratio_4=(0,1)):
         """
         Set offset - ratio pairs
@@ -139,11 +139,11 @@ class HX711:
                 if self.RATIOS[i][0] < measured_value and measured_value < self.RATIOS[i+1][0]:
                     idx = i
                     break
-                    
-            k = (measure_value - self.RATIOS[i][0]) / (self.RATIOS[i+1][0] - self.RATIOS[i][0])
+
+            k = (measured_value - self.RATIOS[i][0]) / (self.RATIOS[i+1][0] - self.RATIOS[i][0])
             return self.RATIOS[i][1] + k * (self.RATIOS[i+1][1] - self.RATIOS[i][1])
-            
-            
+
+
     def read(self):
         """
         Read data from the HX711 chip
@@ -177,7 +177,7 @@ class HX711:
 
 
     def read_running_average(self):
-        self.AVALUE = (self.AVALUE + self.read()) >> 1
+        self.AVALUE = (self.AVALUE + self.read()) / 2
         return self.AVALUE
 
 
