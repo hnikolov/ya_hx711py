@@ -41,6 +41,9 @@ def setup():
     """
     hx.set_offset(8628588.560)
     hx.set_ratio(1656.565317)
+    # TODO
+    hx.set_ratios((0.1), (0,1), (0,1), (0,1))
+    
     hx.tare()
 
 

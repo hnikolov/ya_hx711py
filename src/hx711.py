@@ -62,7 +62,8 @@ class HX711:
         self.GAIN   = 1 # default = 128
         self.OFFSET = 0
         self.RATIO  = 1
-
+        self.RATIOS = [(0,1), (0,1), (0,1), (0,1)] # Measured value - ratio pairs
+        
         self.DELTA  = 0
 
         # Low-pass Filter
@@ -114,7 +115,39 @@ class HX711:
         """
         self.RATIO = ratio
 
+        
+    def set_ratios(self, ratio_1=(0,1), ratio_2=(0,1), ratio_3=(0,1), ratio_4=(0,1)):
+        """
+        Set offset - ratio pairs, TODO
+        """
+        self.RATIOS[0] = ratio_1
+        self.RATIOS[1] = ratio_2
+        self.RATIOS[2] = ratio_3
+        self.RATIOS[3] = ratio_4
 
+
+    def get_ratio(self, measured_value):
+        """
+        Linear Interpolation: ratio = ratio_a + (ratio_b - ratio_a) * ((value - value_a) / (value_b - value_a))
+        Assumption: self.RATIOS[X][0] (i.e., offsets) are monotonically increasing
+        """
+        if measured_value <= self.RATIOS[0][0]:
+            return self.RATIOS[0][1]
+            
+        elif measured_value >= self.RATIOS[3][0]:
+            return self.RATIOS[3][1]
+            
+        else:
+            idx = 0
+            for i in range(len(self.RATIOS)-1):
+                if self.RATIOS[i][0] < measured_value and measured_value < self.RATIOS[i+1][0]:
+                    idx = i
+                    break
+                    
+            k = (measure_value - self.RATIOS[i][0]) / (self.RATIOS[i+1][0] - self.RATIOS[i][0])
+            return self.RATIOS[i][1] + k * (self.RATIOS[i+1][1] - self.RATIOS[i][1])
+            
+            
     def set_offset(self, offset):
         """
         Set the offset
@@ -158,7 +191,7 @@ class HX711:
 
 
     def read_running_average(self):
-        self.AVALUE = (self.AVALUE + self.read()) / 2
+        self.AVALUE = (self.AVALUE + self.read()) >> 1
         return self.AVALUE
 
 
