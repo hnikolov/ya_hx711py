@@ -62,18 +62,18 @@ class HX711:
         self.GAIN   = 1 # default = 128
         self.OFFSET = 0
         self.RATIO  = 1
-        self.RATIOS = [(0,1), (0,1), (0,1), (0,1)] # Measured value - ratio pairs
+        self.RATIOS = [(0,1), (0,1), (0,1), (0,1)] # Measured sensor data (@ reference weight) - ratio pairs
         
-        self.DELTA  = 0
+        self.DELTA  = 0 # TODO: used in case of 2 sensors
 
         # Low-pass Filter
         self.KERNEL = [1, 2, 4, 8, 16, 8, 4, 2, 1]
-        # self.KERNEL = [1, 2, 4, 8, 16, 32]
+        # self.KERNEL = [1, 2, 4, 8, 16, 32] # TODO
         self.KSIZE  = len(self.KERNEL)
         self.NORM   = sum(self.KERNEL)
 
-        # Used to keep average value
-        self.AVALUE = 0; # To be set in tare() 
+        # Used to keep average sensor data
+        self.AVALUE = 0; # Initial value set in tare()
 
         # Note: Only gain=128 is supported
         """
@@ -108,17 +108,17 @@ class HX711:
         self.AVALUE = self.read() # In case tare() is not called
 
 
+    def set_offset(self, offset):
+        self.OFFSET = offset
+
+
     def set_ratio(self, ratio):
-        """
-        Set ratio
-        :param ratio, ratio
-        """
         self.RATIO = ratio
 
         
     def set_ratios(self, ratio_1=(0,1), ratio_2=(0,1), ratio_3=(0,1), ratio_4=(0,1)):
         """
-        Set offset - ratio pairs, TODO
+        Set offset - ratio pairs
         """
         self.RATIOS[0] = ratio_1
         self.RATIOS[1] = ratio_2
@@ -126,17 +126,13 @@ class HX711:
         self.RATIOS[3] = ratio_4
 
 
-    def get_ratio(self, measured_value):
+    def get_interpolated_ratio(self, measured_value):
         """
         Linear Interpolation: ratio = ratio_a + (ratio_b - ratio_a) * ((value - value_a) / (value_b - value_a))
-        Assumption: self.RATIOS[X][0] (i.e., offsets) are monotonically increasing
+        Assumption: self.RATIOS[X][0] (i.e., raw data @ reference weight) are monotonically increasing
         """
-        if measured_value <= self.RATIOS[0][0]:
-            return self.RATIOS[0][1]
-            
-        elif measured_value >= self.RATIOS[3][0]:
-            return self.RATIOS[3][1]
-            
+        if   measured_value <= self.RATIOS[0][0]: return self.RATIOS[0][1] # out of range
+        elif measured_value >= self.RATIOS[3][0]: return self.RATIOS[3][1] # out of range
         else:
             idx = 0
             for i in range(len(self.RATIOS)-1):
@@ -148,19 +144,9 @@ class HX711:
             return self.RATIOS[i][1] + k * (self.RATIOS[i+1][1] - self.RATIOS[i][1])
             
             
-    def set_offset(self, offset):
-        """
-        Set the offset
-        :param offset: offset
-        """
-        self.OFFSET = offset
-
-
     def read(self):
         """
         Read data from the HX711 chip
-        :param void
-        :return reading from the HX711
         """
 
         # Control if the chip is ready
@@ -197,8 +183,8 @@ class HX711:
 
     def read_average(self, times=16):
         """
-        Calculate average value from
-        :param times: measure x amount of time to get average
+        Calculate average value from sensor data samples
+        :param times: read x samples to get average
         """
         sum = 0
         for i in range(times):
@@ -207,7 +193,9 @@ class HX711:
 
 
     def read_average_no_spikes(self, times=25):
-        # Remove spikes
+        """
+        Remove spikes
+        """
         cut = times//5 # discard remainder
         values = sorted([self.read_running_average() for i in range(times)])[cut:-cut]
         return statistics.mean(values)
@@ -220,21 +208,13 @@ class HX711:
         return sum([k*v for (k, v) in zip(self.KERNEL, values)]) / self.NORM
 
 
-    def get_grams(self, times=16):
-        """
-        :param times: set value to calculate average
-        :return float weight in grams: (value - offset) / ratio
-        """
-        #return (self.read_average(times) - self.OFFSET) / self.RATIO
-        return (self.read_average_no_spikes() - self.OFFSET) / self.RATIO
-
-
     def to_grams(self, value):
         """
         :param value: to be converted to grams
         :return float weight in grams
         """
-        return (value - self.OFFSET) / self.RATIO
+        # return (value - self.OFFSET) / self.RATIO
+        return (value - self.OFFSET) / self.get_interpolated_ratio( value )
 
 
     def round_to(self, value, res):
