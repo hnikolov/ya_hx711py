@@ -35,24 +35,24 @@ def cleanAndExit():
     sys.exit()
 
 
-
-def setup():
-    """
-    code run once
-    """
-    pass
-
-
 def loop():
-    """
-    code run continuosly
-    """
+    idx = 0
+    samples = [0, 0, 0, 0]
+    avrg = 0
 
+    print 'Samples                                          Average'
+    
     try:
         hx.reset()
-        val = hx.read_average_no_spikes(times=250)
-        print val
+        
+        for i in range(4):
+            samples[i] = hx.read_average_LPF() # including running average
+#            samples[i] = hx.read_average_no_spikes(times=9) # Try as well?
+            print samples[i], ','
 
+        avrg = (samples[0] + samples[1] + samples[2] + samples[3]) / 4
+        print '        ', avrg
+        
     except (KeyboardInterrupt, SystemExit):
         cleanAndExit()
 
@@ -60,9 +60,7 @@ def loop():
 ##################################
 
 if __name__ == "__main__":
-
-    setup()
-    print "Press Enter when ready"
+    print "Press Enter when ready, 'q' for quit"
     while True:
         q = raw_input()
         if q == 'q':
