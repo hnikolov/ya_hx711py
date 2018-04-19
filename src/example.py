@@ -22,10 +22,11 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 import RPi.GPIO as GPIO
 import time
 import sys
-from hx711 import HX711
-
+from hx711   import HX711
+from hx711_2 import HX711_2
 
 hx = HX711(dout=5, pd_sck=6)
+# hx = HX711_2(dout_1=5, pd_sck_1=6, dout_1=?, pd_sck_1=?)
 
 
 def cleanAndExit():
@@ -41,7 +42,7 @@ def setup():
     """
     # 1 (average) ratio
     # hx.set_offset(8628588.560)
-    hx.set_ratio(1656.565317)
+    # hx.set_ratio(1656.565317)
 
     # TODO 7 ratios for 25, 75, 150, 225, 300, 375, 475 ref. grams
     # hx.set_offset(8628270.340)
@@ -56,7 +57,7 @@ def setup():
 
 def loop():
     """
-    code run continuously
+    Use the different read methods (for comparison)
     """
 
     print 'average         avrg_no_spikes       low-pass filter           avrg of the 3'

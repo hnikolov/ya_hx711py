@@ -22,10 +22,12 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 import RPi.GPIO as GPIO
 import time
 import sys
-from hx711 import HX711
+from hx711   import HX711
+from hx711_2 import HX711_2
 
 
 hx = HX711(dout=5, pd_sck=6)
+# hx = HX711_2(dout_1=5, pd_sck_1=6, dout_1=?, pd_sck_1=?)
 
 
 def cleanAndExit():
