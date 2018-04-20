@@ -177,7 +177,7 @@ class HX711:
 
 
     def read_running_average(self):
-        self.AVALUE = (self.AVALUE + self.read()) / 2
+        self.AVALUE = (self.AVALUE + self.read()) / 2.0
         return self.AVALUE
 
 

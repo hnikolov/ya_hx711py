@@ -77,7 +77,7 @@ class HX711_2:
         GPIO.setup(self.PD_SCK_1, GPIO.OUT)
         GPIO.setup(self.PD_SCK_2, GPIO.OUT)
         # -------------------------------------
-        
+
         self.OFFSET = 0
         self.RATIO  = 1
         self.RATIOS = [(0,1) for _ in range(4)] # (measured sensor data @ reference weight), calculated ratio)
@@ -93,7 +93,7 @@ class HX711_2:
 
         # Power up the chip
         self.reset()
-        self.AVALUE = self.read_average_no_spikes(9) # In case tare() is not called
+        self.AVALUE = self.read_both() # In case tare() is not called
 
 
     def set_offset(self, offset):
@@ -160,13 +160,16 @@ class HX711_2:
         return count
 
 
-    def read_running_average(self):
+    def read_both(self):
         value = self.read(self.DOUT_1, self.PD_SCK_1)
 
         if self.DOUT_2 != None and self.PD_SCK_2 != None:
             value += self.read(self.DOUT_2, self.PD_SCK_2)
-               
-        self.AVALUE = (self.AVALUE + value) / 2
+
+        return value
+
+    def read_running_average(self):
+        self.AVALUE = (self.AVALUE + self.read_both()) / 2.0
         return self.AVALUE
 
 
@@ -223,7 +226,7 @@ class HX711_2:
         Tare functionality for calibration
         :param times: set value to calculate average
         """
-        self.AVALUE = self.read_average_no_spikes(times)
+        self.AVALUE = self.read_both()
         self.set_offset(self.AVALUE)
 
 

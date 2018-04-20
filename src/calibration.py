@@ -26,8 +26,9 @@ from hx711   import HX711
 from hx711_2 import HX711_2
 
 
-hx = HX711(dout=5, pd_sck=6)
-# hx = HX711_2(dout_1=5, pd_sck_1=6, dout_1=?, pd_sck_1=?)
+#hx = HX711(dout=5, pd_sck=6)
+#hx = HX711(dout=20, pd_sck=21)
+hx = HX711_2(dout_1=5, pd_sck_1=6, dout_2=20, pd_sck_2=20)
 
 
 def cleanAndExit():
@@ -42,15 +43,15 @@ def loop():
     samples = [0, 0, 0, 0]
     avrg = 0
 
-    print 'Samples                                          Average'
-    
+    print 'Samples                                                         Average'
+
     try:
         hx.reset()
-        
+
         for i in range(4):
             samples[i] = hx.read_average_LPF() # including running average
 #            samples[i] = hx.read_average_no_spikes(times=9) # Try as well?
-            print samples[i], ','
+            print samples[i], ',',
 
         avrg = (samples[0] + samples[1] + samples[2] + samples[3]) / 4
         print '        ', avrg
