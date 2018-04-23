@@ -19,12 +19,19 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 """
 
+# TODO Make it a class
+
 import RPi.GPIO as GPIO
 import time
 import sys
 from hx711   import HX711
 from hx711_2 import HX711_2
 
+# Contain tuples of (reference weight, measured offset, calculated ratio)
+mylist   = []
+offset   = 0
+avrg     = 0
+filename = "calibration_data.txt"
 
 #hx = HX711(dout=5, pd_sck=6)
 #hx = HX711(dout=20, pd_sck=21)
@@ -39,9 +46,10 @@ def cleanAndExit():
 
 
 def loop():
+    global avrg
+    
     idx = 0
     samples = [0, 0, 0, 0]
-    avrg = 0
 
     print 'Samples                                                         Average'
 
@@ -53,19 +61,58 @@ def loop():
 #            samples[i] = hx.read_average_no_spikes(times=9) # Try as well?
             print samples[i], ',',
 
-        avrg = (samples[0] + samples[1] + samples[2] + samples[3]) / 4
+        avrg = (samples[0] + samples[1] + samples[2] + samples[3]) / 4.0
         print '        ', avrg
         
     except (KeyboardInterrupt, SystemExit):
         cleanAndExit()
 
 
+def set_data( ref_weight, measured_value, offset ):
+    if ref_weight == 0:
+        print( "Reference weight cannot be 0" )
+        return
+    ratio = round((measured_value - offset) / ref_weight, 3)
+    mylist.append((ref_weight, measured_value, ratio))
+    
+
+def write_data():
+    """ Store the measured offsets/calculated ratios to file
+    """
+    with open(filename, 'w') as f:
+        f.write('\n'.join('%s, %s, %s' % x for x in mylist))
+        print( "Data written to", filename )
+
+
+def initial_offset():
+    global offset
+    global mylist
+    
+    print( "First measurement without a reference weight, press 'Enter' when ready" )
+    q = input()
+    loop()
+    offset = avrg
+    mylist.append((0, avrg, 1))
+    
+
 ##################################
 
 if __name__ == "__main__":
-    print "Press Enter when ready, 'q' for quit"
+    
+    initial_offset()
+    
     while True:
-        q = raw_input()
+        print( "Enter the reference weight being used and press 'Enter' when ready, 'q' for quit" )
+        q = input()
+        
         if q == 'q':
+            write_data()
+            print( mylist )
             cleanAndExit()
-        loop()
+
+        elif q.replace('.','',1).isdigit(): # works for positive int and float
+            loop()
+            set_data(eval(q), avrg, offset)
+
+        else:
+            print( "Wrong reference weight!" )
