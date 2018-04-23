@@ -25,9 +25,9 @@ import sys
 from hx711   import HX711
 from hx711_2 import HX711_2
 
-#hx = HX711(dout=5, pd_sck=6)
+hx = HX711(dout=5, pd_sck=6)
 #hx = HX711(dout=20, pd_sck=21)
-hx = HX711_2(dout_1=5, pd_sck_1=6, dout_2=20, pd_sck_2=21)
+#hx = HX711_2(dout_1=5, pd_sck_1=6, dout_2=20, pd_sck_2=21)
 
 
 def cleanAndExit():
@@ -66,10 +66,11 @@ def setup():
     with open("calibration_data.txt") as f:
         mylist = [tuple(map(eval, i.split(','))) for i in f]
         print( mylist )
-        
+
     hx.set_offset(mylist[0][1])
     hx.set_ratios((mylist[1][1],mylist[1][2]), (mylist[2][1],mylist[2][2]), (mylist[3][1],mylist[3][2]), (mylist[4][1],mylist[4][2]))
-    
+    print hx.RATIOS
+
     hx.tare()
 
 
@@ -91,10 +92,10 @@ def loop():
             g_2 = hx.to_grams( v_2 )
             g_3 = hx.to_grams( v_3 )
 
-            print( hx.round_to(g_1, 0.25), ',', hx.round_to(g_1, 0.5), '        ', )
-            print( hx.round_to(g_2, 0.25), ',', hx.round_to(g_2, 0.5), '        ', )
-            print( hx.round_to(g_3, 0.25), ',', hx.round_to(g_3, 0.5), '        ', )
-            print( hx.round_to((g_1 + g_2 + g_3)/3, 0.25), 'g' )
+            print hx.round_to(g_1, 0.25), ',', hx.round_to(g_1, 0.5), '        ',
+            print hx.round_to(g_2, 0.25), ',', hx.round_to(g_2, 0.5), '        ',
+            print hx.round_to(g_3, 0.25), ',', hx.round_to(g_3, 0.5), '        ',
+            print hx.round_to((g_1 + g_2 + g_3)/3, 0.25), 'g'
 
 #            time.sleep(1)
             hx.reset()
@@ -124,11 +125,11 @@ def loop_1():
 
             samples[idx] = hx.read_average_LPF() # TODO: Use the other functions as well?
             samples[idx] = hx.to_grams( samples[idx] ) # TODO: avrg before or after the rounding?
-            avrg = (samples[0] + samples[1] + samples[2] + samples[3]) / 4
+            avrg = (samples[0] + samples[1] + samples[2] + samples[3]) / 4.0
             #avrg = (avrg + samples[idx]) / 2 # Running average
 
-            print( hx.round_to(samples[idx], 0.25), ',', hx.round_to(samples[idx], 0.5), '        ', )
-            print( hx.round_to(avrg, 0.25), ',', hx.round_to(avrg, 0.5), 'g' )
+            print hx.round_to(samples[idx], 0.25), ',', hx.round_to(samples[idx], 0.5), '        ',
+            print hx.round_to(avrg, 0.25), ',', hx.round_to(avrg, 0.5), 'g'
 
             idx = (idx + 1) % 4 # modulo counter
 

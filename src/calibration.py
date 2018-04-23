@@ -1,3 +1,4 @@
+
 """
 HX711 Load cell amplifier Python Library
 Original source: https://gist.github.com/underdoeg/98a38b54f889fce2b237
@@ -33,9 +34,9 @@ offset   = 0
 avrg     = 0
 filename = "calibration_data.txt"
 
-#hx = HX711(dout=5, pd_sck=6)
+hx = HX711(dout=5, pd_sck=6)
 #hx = HX711(dout=20, pd_sck=21)
-hx = HX711_2(dout_1=5, pd_sck_1=6, dout_2=20, pd_sck_2=20)
+#hx = HX711_2(dout_1=5, pd_sck_1=6, dout_2=20, pd_sck_2=20)
 
 
 def cleanAndExit():
@@ -47,7 +48,7 @@ def cleanAndExit():
 
 def loop():
     global avrg
-    
+
     idx = 0
     samples = [0, 0, 0, 0]
 
@@ -63,7 +64,7 @@ def loop():
 
         avrg = (samples[0] + samples[1] + samples[2] + samples[3]) / 4.0
         print '        ', avrg
-        
+
     except (KeyboardInterrupt, SystemExit):
         cleanAndExit()
 
@@ -74,37 +75,37 @@ def set_data( ref_weight, measured_value, offset ):
         return
     ratio = round((measured_value - offset) / ref_weight, 3)
     mylist.append((ref_weight, measured_value, ratio))
-    
+
 
 def write_data():
     """ Store the measured offsets/calculated ratios to file
     """
     with open(filename, 'w') as f:
         f.write('\n'.join('%s, %s, %s' % x for x in mylist))
-        print( "Data written to", filename )
+        print "Data written to:", filename
 
 
 def initial_offset():
     global offset
     global mylist
-    
-    print( "First measurement without a reference weight, press 'Enter' when ready" )
-    q = input()
+
+    print "First measurement without a reference weight, press 'Enter' when ready"
+    q = raw_input()
     loop()
-    offset = avrg
-    mylist.append((0, avrg, 1))
-    
+    offset = round(avrg, 3)
+    mylist.append((0, offset, 1))
+
 
 ##################################
 
 if __name__ == "__main__":
-    
+
     initial_offset()
-    
+
     while True:
         print( "Enter the reference weight being used and press 'Enter' when ready, 'q' for quit" )
-        q = input()
-        
+        q = raw_input()
+
         if q == 'q':
             write_data()
             print( mylist )
