@@ -67,6 +67,7 @@ def setup():
         mylist = [tuple(map(eval, i.split(','))) for i in f]
         print( mylist )
 
+    # TODO: Set DELTA = offset sensor 1 (weight) - offset sensor 2 (idle)
     hx.set_offset(mylist[0][1])
     hx.set_ratios((mylist[1][1],mylist[1][2]), (mylist[2][1],mylist[2][2]), (mylist[3][1],mylist[3][2]), (mylist[4][1],mylist[4][2]))
     print hx.RATIOS

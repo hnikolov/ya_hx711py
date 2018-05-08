@@ -34,9 +34,9 @@ offset   = 0
 avrg     = 0
 filename = "calibration_data.txt"
 
-hx = HX711(dout=5, pd_sck=6)
+#hx = HX711(dout=5, pd_sck=6)
 #hx = HX711(dout=20, pd_sck=21)
-#hx = HX711_2(dout_1=5, pd_sck_1=6, dout_2=20, pd_sck_2=20)
+hx = HX711_2(dout_1=5, pd_sck_1=6, dout_2=20, pd_sck_2=20)
 
 
 def cleanAndExit():
@@ -94,6 +94,9 @@ def initial_offset():
     loop()
     offset = round(avrg, 3)
     mylist.append((0, offset, 1))
+
+    # TODO
+    print "Offset of sensor 2:", hx.AOFFSET
 
 
 ##################################

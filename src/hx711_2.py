@@ -79,6 +79,7 @@ class HX711_2:
         # -------------------------------------
 
         self.OFFSET = 0
+        self.DELTA  = 0 # DELTA = Offset sensor 1 - Offset sensor 2
         self.RATIO  = 1
         self.RATIOS = [(0,1) for _ in range(4)] # (measured sensor data @ reference weight), calculated ratio)
 
@@ -88,16 +89,23 @@ class HX711_2:
         self.KSIZE  = len(self.KERNEL)
         self.NORM   = sum(self.KERNEL)
 
-        # Used to keep average sensor(s) data
-        self.AVALUE = 0; # Initial value set in tare()
+        # Sensor 1 - measure weight; Sensor 2 - measure offset
+        # Used to keep the average Sensor 1 data
+        self.AVALUE  = 0 # Initial value set in tare()
+        # Used to keep the average Sensor 2 data
+        self.AOFFSET = 0
 
         # Power up the chip
         self.reset()
-        self.AVALUE = self.read_both() # In case tare() is not called
+        self.AVALUE = self.read_average_no_spikes(times=16) # In case tare() is not called
 
 
     def set_offset(self, offset):
         self.OFFSET = offset
+
+
+    def set_delta(self, delta):
+        self.DELTA = delta
 
 
     def set_ratio(self, ratio):
@@ -160,16 +168,9 @@ class HX711_2:
         return count
 
 
-    def read_both(self):
-        value = self.read(self.DOUT_1, self.PD_SCK_1)
-
-        if self.DOUT_2 != None and self.PD_SCK_2 != None:
-            value += self.read(self.DOUT_2, self.PD_SCK_2)
-
-        return value
-
     def read_running_average(self):
-        self.AVALUE = (self.AVALUE + self.read_both()) / 2.0
+        self.AVALUE  = (self.AVALUE  + self.read(self.DOUT_1, self.PD_SCK_1)) / 2.0
+        self.AOFFSET = (self.AOFFSET + self.read(self.DOUT_2, self.PD_SCK_2)) / 2.0
         return self.AVALUE
 
 
@@ -178,10 +179,14 @@ class HX711_2:
         Calculate average value from sensor data samples
         :param times: read x samples to get average
         """
-        sum = 0
+        value  = 0
+        offset = 0
+
         for i in range(times):
-            sum += read_running_average()
-        return sum / times
+            value  += self.read(self.DOUT_1, self.PD_SCK_1)
+            offset += self.read(self.DOUT_2, self.PD_SCK_2)
+
+        return value/times, offset/times
 
 
     def read_average_no_spikes(self, times=25):
@@ -207,9 +212,9 @@ class HX711_2:
         """
         # TODO: ratio or (offset,ratio) pairs must be set. How to check?
         if self.RATIO != 1:
-            return (value - self.OFFSET) / self.RATIO
-        else: 
-            return (value - self.OFFSET) / self.get_interpolated_ratio( value )
+            return (value - self.AOFFSET - self.DELTA) / self.RATIO
+        else:
+            return (value - self.AOFFSET - self.DELTA) / self.get_interpolated_ratio( value )
 
 
     def round_to(self, value, res):
@@ -226,7 +231,7 @@ class HX711_2:
         Tare functionality for calibration
         :param times: set value to calculate average
         """
-        self.AVALUE = self.read_both()
+        self.AVALUE = self.read_average_no_spikes(times) # self.AOFFSET set as well
         self.set_offset(self.AVALUE)
 
 
@@ -250,7 +255,7 @@ class HX711_2:
     def reset(self):
          self.power_down(self.PD_SCK_1)
          self.power_up(self.PD_SCK_1)
-         
+
          if self.DOUT_2 != None and self.PD_SCK_2 != None:
             self.power_down(self.PD_SCK_2)
             self.power_up(self.PD_SCK_2)
