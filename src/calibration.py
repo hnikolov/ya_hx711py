@@ -52,7 +52,7 @@ def loop():
     idx = 0
     samples = [0, 0, 0, 0]
 
-    print 'Samples                                                         Average'
+    print 'Samples                                                         Average   Offset Sen 2'
 
     try:
         hx.reset()
@@ -63,7 +63,7 @@ def loop():
             print samples[i], ',',
 
         avrg = (samples[0] + samples[1] + samples[2] + samples[3]) / 4.0
-        print '        ', avrg
+        print '        ', avrg, '        ', hx.AOFFSET
 
     except (KeyboardInterrupt, SystemExit):
         cleanAndExit()
@@ -73,8 +73,9 @@ def set_data( ref_weight, measured_value, offset ):
     if ref_weight == 0:
         print( "Reference weight cannot be 0" )
         return
-    ratio = round((measured_value - offset) / ref_weight, 3)
-    mylist.append((ref_weight, measured_value, ratio))
+    ratio   = round((measured_value - offset)     / ref_weight, 3)
+    ratio_2 = round((measured_value - hx.AOFFSET) / ref_weight, 3) # For 2 sensors
+    mylist.append((ref_weight, measured_value, ratio, hx.AOFFSET, ratio_2))
 
 
 def write_data():
@@ -93,10 +94,7 @@ def initial_offset():
     q = raw_input()
     loop()
     offset = round(avrg, 3)
-    mylist.append((0, offset, 1))
-
-    # TODO
-    print "Offset of sensor 2:", hx.AOFFSET
+    mylist.append((0, offset, 1, hx.AOFFSET, 1))
 
 
 ##################################

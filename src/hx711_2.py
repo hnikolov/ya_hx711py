@@ -97,7 +97,12 @@ class HX711_2:
 
         # Power up the chip
         self.reset()
-        self.AVALUE = self.read_average_no_spikes(times=16) # In case tare() is not called
+        self.initialize() # In case tare() is not called
+
+        
+    def initialize(self):
+        self.AVALUE  = self.read(self.DOUT_1, self.PD_SCK_1) # In case tare() is not called
+        self.AOFFSET = self.read(self.DOUT_2, self.PD_SCK_2) # In case tare() is not called
 
 
     def set_offset(self, offset):
@@ -174,14 +179,16 @@ class HX711_2:
         return self.AVALUE
 
 
-    def read_average(self, times=16):
+    def read_average(self, times=9):
         """
         Calculate average value from sensor data samples
         :param times: read x samples to get average
         """
         value  = 0
         offset = 0
-
+        
+        self.initialize()
+        
         for i in range(times):
             value  += self.read(self.DOUT_1, self.PD_SCK_1)
             offset += self.read(self.DOUT_2, self.PD_SCK_2)
@@ -193,6 +200,8 @@ class HX711_2:
         """
         Remove spikes
         """
+        self.initialize()
+        
         cut = times//5 # discard remainder
         values = sorted([self.read_running_average() for i in range(times)])[cut:-cut]
         return statistics.mean(values)
@@ -201,6 +210,7 @@ class HX711_2:
     def read_average_LPF(self):
         """
         """
+        self.initialize()
         values = [self.read_running_average() for i in range(self.KSIZE)]
         return sum([k*v for (k, v) in zip(self.KERNEL, values)]) / self.NORM
 
@@ -212,9 +222,11 @@ class HX711_2:
         """
         # TODO: ratio or (offset,ratio) pairs must be set. How to check?
         if self.RATIO != 1:
-            return (value - self.AOFFSET - self.DELTA) / self.RATIO
+#            return (value - self.AOFFSET - self.DELTA) / self.RATIO
+            return (value - self.AOFFSET) / self.RATIO
         else:
-            return (value - self.AOFFSET - self.DELTA) / self.get_interpolated_ratio( value )
+#            return (value - self.AOFFSET - self.DELTA) / self.get_interpolated_ratio( value )
+            return (value - self.AOFFSET) / self.get_interpolated_ratio( value )
 
 
     def round_to(self, value, res):
