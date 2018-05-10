@@ -99,7 +99,7 @@ class HX711_2:
         self.reset()
         self.initialize() # In case tare() is not called
 
-        
+
     def initialize(self):
         self.AVALUE  = self.read(self.DOUT_1, self.PD_SCK_1) # In case tare() is not called
         self.AOFFSET = self.read(self.DOUT_2, self.PD_SCK_2) # In case tare() is not called
@@ -186,9 +186,9 @@ class HX711_2:
         """
         value  = 0
         offset = 0
-        
+
         self.initialize()
-        
+
         for i in range(times):
             value  += self.read(self.DOUT_1, self.PD_SCK_1)
             offset += self.read(self.DOUT_2, self.PD_SCK_2)
@@ -201,7 +201,7 @@ class HX711_2:
         Remove spikes
         """
         self.initialize()
-        
+
         cut = times//5 # discard remainder
         values = sorted([self.read_running_average() for i in range(times)])[cut:-cut]
         return statistics.mean(values)
@@ -244,6 +244,7 @@ class HX711_2:
         :param times: set value to calculate average
         """
         self.AVALUE = self.read_average_no_spikes(times) # self.AOFFSET set as well
+        self.DELTA = self.AVALUE - self.AOFFSET
         self.set_offset(self.AVALUE)
 
 

@@ -34,9 +34,9 @@ offset   = 0
 avrg     = 0
 filename = "calibration_data.txt"
 
-#hx = HX711(dout=5, pd_sck=6)
+hx = HX711(dout=5, pd_sck=6)
 #hx = HX711(dout=20, pd_sck=21)
-hx = HX711_2(dout_1=5, pd_sck_1=6, dout_2=20, pd_sck_2=20)
+#hx = HX711_2(dout_1=5, pd_sck_1=6, dout_2=20, pd_sck_2=21)
 
 
 def cleanAndExit():
@@ -74,8 +74,9 @@ def set_data( ref_weight, measured_value, offset ):
         print( "Reference weight cannot be 0" )
         return
     ratio   = round((measured_value - offset)     / ref_weight, 3)
-    ratio_2 = round((measured_value - hx.AOFFSET) / ref_weight, 3) # For 2 sensors
-    mylist.append((ref_weight, measured_value, ratio, hx.AOFFSET, ratio_2))
+    ratio_2 = round((measured_value - hx.AOFFSET) / ref_weight, 3)           # For 2 sensors
+#    mylist.append((ref_weight, measured_value, ratio, hx.AOFFSET, ratio_2)) # for 2 sensors
+    mylist.append((ref_weight, measured_value, ratio))
 
 
 def write_data():
@@ -83,6 +84,7 @@ def write_data():
     """
     with open(filename, 'w') as f:
         f.write('\n'.join('%s, %s, %s' % x for x in mylist))
+#        f.write('\n'.join('%s, %s, %s, %s, %s' % x for x in mylist)) # for 2 sensors
         print "Data written to:", filename
 
 
